@@ -1,0 +1,13 @@
+[tools]
+node = "24"
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]
+
+[tasks.build]
+run = "bin/build"
+description = "Build one or all talks (usage: mise run build [slug])"
+
+[tasks.dev]
+run = "bin/dev"
+description = "Dev server for a talk (usage: mise run dev <slug>)"

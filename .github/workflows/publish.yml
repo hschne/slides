@@ -1,0 +1,38 @@
+name: Publish Talks
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up mise
+        uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Build all talks
+        run: bin/build
+
+      - name: Publish to published branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: published
+          publish_dir: ./out
+          force_orphan: false
+          keep_files: false
+          commit_message: "publish: ${{ github.sha }}"
