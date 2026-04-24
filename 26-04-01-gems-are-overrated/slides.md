@@ -10,6 +10,8 @@ drawings:
 transition: fade
 mdc: true
 duration: 35min
+seoMeta:
+  ogImage: auto
 ---
 
 # Gems Are Overrated
