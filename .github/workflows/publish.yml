@@ -34,8 +34,23 @@ jobs:
           key: talks-out-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: talks-out-${{ github.ref_name }}-
 
-      - name: Build talks
+      - name: Build slides
         run: bin/build
+
+      - name: Check manifest cache
+        id: manifest-cache
+        uses: actions/cache@v5
+        with:
+          path: ./out/manifest.json
+          key: manifest-${{ hashFiles('out/manifest.json') }}
+
+      - name: Trigger Jekyll rebuild if manifest changed
+        if: steps.manifest-cache.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.HSCHNE_DISPATCH_TOKEN }}
+        run: |
+          echo "Manifest changed — triggering Jekyll rebuild"
+          gh api repos/hschne/hschne.github.io/dispatches -f event_type=slides
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v5
