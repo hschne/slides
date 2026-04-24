@@ -1,5 +1,0 @@
-slug: ruby-christmas
-title: A Ruby Christmas
-description: A festive dive into Ruby internals and quirks, including frozen string literals and other Ruby oddities.
-public: true
-framework: static
