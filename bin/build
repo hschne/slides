@@ -10,22 +10,22 @@ FORCE=false
 
 usage() {
   cat <<EOF
-Usage: bin/build [--verbose] [--force] [<talk-dir>...]
+Usage: bin/build [--verbose] [--force] [<slide-dir>...]
 
-Build talks into out/<slug>/. Reads talk.yml in each dated directory.
-Skips talks whose source hasn't changed since the last build (hash-based).
+Build slides into out/<slug>/. Reads slides.yml in each dated directory.
+Skips slides whose source hasn't changed since the last build (hash-based).
 
 Options:
   --verbose, -v   Show full output from npm/pnpm commands
-  --force, -f     Rebuild all talks regardless of cache
+  --force, -f     Rebuild all slides regardless of cache
 
 Arguments:
-  talk-dir    One or more talk directories to build (optional). Builds all talks if omitted.
+  slide-dir    One or more slide directories to build (optional). Builds all slides if omitted.
 
 Frameworks:
-  static   Copy directory as-is (legacy talks with vendored reveal.js)
+  static   Copy directory as-is (legacy slides with vendored reveal.js)
   revealjs npm install && npm run build → copies dist/ to out/<slug>/
-  slidev   pnpm install && pnpm build --base /talks/<slug>/ → copies dist/ to out/<slug>/
+  slidev   pnpm install && pnpm build --base /slides/<slug>/ → copies dist/ to out/<slug>/
 EOF
 }
 
@@ -51,7 +51,7 @@ check_root_changed() {
   return 0 # changed
 }
 
-clean_deleted_talks() {
+clean_deleted_slides() {
   for out_slug_dir in "${OUT_DIR}"/*/; do
     [[ -d "$out_slug_dir" ]] || continue
     local slug
@@ -59,37 +59,37 @@ clean_deleted_talks() {
     [[ "$slug" == ".cache" ]] && continue
 
     local found=false
-    for talk_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
-      [[ -d "$talk_dir" ]] || continue
-      local talk_yml="${talk_dir}/talk.yml"
-      [[ -f "$talk_yml" ]] || continue
-      if [[ "$(yq '.slug' "$talk_yml")" == "$slug" ]]; then
+    for slide_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
+      [[ -d "$slide_dir" ]] || continue
+      local slide_yml="${slide_dir}/slides.yml"
+      [[ -f "$slide_yml" ]] || continue
+      if [[ "$(yq '.slug' "$slide_yml")" == "$slug" ]]; then
         found=true
         break
       fi
     done
 
     if ! $found; then
-      echo "Removing deleted talk: ${slug}"
+      echo "Removing deleted slide: ${slug}"
       rm -rf "$out_slug_dir"
       rm -f "${CACHE_DIR}/${slug}.hash"
     fi
   done
 }
 
-build_talk() {
-  local talk_dir="$1"
+build_slide() {
+  local slide_dir="$1"
   local force_build="${2:-false}"
-  local talk_yml="${talk_dir}/talk.yml"
+  local slide_yml="${slide_dir}/slides.yml"
 
   local slug framework
-  slug=$(yq '.slug' "$talk_yml")
-  framework=$(yq '.framework' "$talk_yml")
+  slug=$(yq '.slug' "$slide_yml")
+  framework=$(yq '.framework' "$slide_yml")
 
   # Check cache
   local hash_file="${CACHE_DIR}/${slug}.hash"
   local current_hash
-  current_hash=$(hash_dir "$talk_dir")
+  current_hash=$(hash_dir "$slide_dir")
 
   if ! $force_build && [[ -f "$hash_file" ]] && [[ "$(cat "$hash_file")" == "$current_hash" ]]; then
     echo "Skipping: ${slug} (unchanged)"
@@ -103,12 +103,12 @@ build_talk() {
 
   case "$framework" in
     static)
-      cp -r "${talk_dir}/." "${out_dir}/"
-      rm -f "${out_dir}/talk.yml" "${out_dir}/.node-version"
+      cp -r "${slide_dir}/." "${out_dir}/"
+      rm -f "${out_dir}/slides.yml" "${out_dir}/.node-version"
       ;;
     revealjs)
       (
-        cd "$talk_dir"
+        cd "$slide_dir"
         if $VERBOSE; then
           npm install
           npm run build
@@ -121,13 +121,13 @@ build_talk() {
       ;;
     slidev)
       (
-        cd "$talk_dir"
+        cd "$slide_dir"
         if $VERBOSE; then
           pnpm install
-          pnpm build --base "/talks/${slug}/"
+          pnpm build --base "/slides/${slug}/"
         else
           pnpm install --silent
-          pnpm build --base "/talks/${slug}/" > /dev/null 2>&1
+          pnpm build --base "/slides/${slug}/" > /dev/null 2>&1
         fi
         cp -r dist/. "${out_dir}/"
       )
@@ -142,13 +142,13 @@ generate_manifest() {
   local manifest="${OUT_DIR}/manifest.json"
   echo "Generating manifest.json"
 
-  for talk_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
-    local talk_yml="${talk_dir}/talk.yml"
+  for slide_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
+    local slide_yml="${slide_dir}/slides.yml"
     local dir_name date
-    dir_name=$(basename "$talk_dir")
+    dir_name=$(basename "$slide_dir")
     date=$(echo "$dir_name" | grep -oE '^[0-9]{2}-[0-9]{2}-[0-9]{2}' | sed 's/^\([0-9]\{2\}\)-\([0-9]\{2\}\)-\([0-9]\{2\}\)/20\1-\2-\3/')
 
-    yq -o=json "{\"slug\": .slug, \"title\": .title, \"description\": .description, \"date\": \"${date}\", \"framework\": .framework, \"public\": .public}" "$talk_yml"
+    yq -o=json "{\"slug\": .slug, \"title\": .title, \"description\": .description, \"date\": \"${date}\", \"framework\": .framework, \"public\": .public}" "$slide_yml"
   done | jq -s '.' > "$manifest"
 
   echo "  → out/manifest.json"
@@ -169,28 +169,28 @@ main() {
 
   mkdir -p "$OUT_DIR" "$CACHE_DIR"
 
-  # Clean output for deleted talk directories
-  clean_deleted_talks
+  # Clean output for deleted slide directories
+  clean_deleted_slides
 
-  # Check if root build files changed → force rebuild all
+  # Check if root build files changed → force rebuild all (only when building all slides)
   local force_build=$FORCE
-  if ! $force_build && check_root_changed; then
-    echo "Root build files changed — rebuilding all talks"
+  if [[ $# -eq 0 ]] && ! $force_build && check_root_changed; then
+    echo "Root build files changed — rebuilding all slides"
     force_build=true
   fi
 
   if [[ $# -gt 0 ]]; then
-    for talk_dir in "$@"; do
-      if build_talk "$(cd "$talk_dir" && pwd)" "$force_build"; then
+    for slide_dir in "$@"; do
+      if build_slide "$(cd "$slide_dir" && pwd)" "$force_build"; then
         built=$(( built + 1 ))
       else
         skipped=$(( skipped + 1 ))
       fi
     done
   else
-    for talk_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
-      [[ -d "$talk_dir" ]] || continue
-      if build_talk "$talk_dir" "$force_build"; then
+    for slide_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
+      [[ -d "$slide_dir" ]] || continue
+      if build_slide "$slide_dir" "$force_build"; then
         built=$(( built + 1 ))
       else
         skipped=$(( skipped + 1 ))
@@ -200,7 +200,7 @@ main() {
 
   generate_manifest
 
-  echo "Done. Built ${built}, skipped ${skipped} talk(s)."
+  echo "Done. Built ${built}, skipped ${skipped} slide(s)."
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
