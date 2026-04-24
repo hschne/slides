@@ -1,0 +1,74 @@
+<html>
+<head>
+    <title>An Introduction To Frontend Testing</title>
+    <meta charset='utf-8'>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="vendor/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="css/slides.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/css/theme/night.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/monokai-sublime.min.css"/>
+
+    <link href="https://netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Grand+Hotel|Vibur' rel='stylesheet' type='text/css'>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+          <h2>Improving Backend Testing</h2>
+            <span class="author">
+                28.03.2019
+            </span>
+            <aside class="notes">
+            </aside>
+        </section>
+
+        <section data-markdown="slides.md">
+        </section>
+    </div>
+</div>
+<script src="vendor/reveal.js/lib/js/head.min.js"></script>
+<script src="vendor/reveal.js/js/reveal.js"></script>
+<script>
+    Reveal.configure({
+            transition: 'none',
+            history: 'true'
+        });
+    Reveal.configure({
+        keyboard: {
+            40: 'next',
+            38: 'prev'
+        }
+    });
+    Reveal.initialize({
+        markdown: {
+            smartypants: true
+        },
+        dependencies: [
+            {
+                src: 'vendor/reveal.js/lib/js/classList.js', condition: function () {
+                    return !document.body.classList;
+                }
+            },
+            {
+                src: 'vendor/reveal.js/plugin/highlight/highlight.js', async: true, callback: function () {
+                    hljs.initHighlightingOnLoad();
+                }
+            },
+            {src: 'vendor/reveal.js/plugin/notes/notes.js', async: true},
+            {
+                src: 'vendor/reveal.js/plugin/markdown/marked.js', condition: function () {
+                    return !!document.querySelector('[data-markdown]');
+                }
+            },
+            {
+                src: 'vendor/reveal.js/plugin/markdown/markdown.js', condition: function () {
+                    return !!document.querySelector('[data-markdown]');
+                }
+            },
+        ]
+    });
+</script>
+</body>
+</html>
+

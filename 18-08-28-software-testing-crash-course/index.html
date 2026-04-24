@@ -1,0 +1,602 @@
+<html>
+  <head>
+    <title>A Software Testing Crashcourse - Hans Schnedlitz</title>
+    <meta charset='utf-8'>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="vendor/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="css/slides.min.css">  
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>A Software Testing Crashcourse</h1>
+          <h2 class="author"> 
+            Hans-Jörg Schnedlitz - 28.08.2018
+          </h2> 
+          <aside class="notes">
+            <ul>
+              <li>Introduction</li>
+              <li>Due to popular demand a crashcourse in software testing</li>
+              <li>Crashcourse means: What I think is important and doable in this time frame.</li> 
+            </ul>
+          </aside>
+        </section>
+        <section>
+          <h2>Roadmap for Today</h2>
+          <ul>
+            <li>What is Testing?</li> 
+            <li>Applications to Testing</li> 
+            <li>Test Design Techniques</li> 
+            <li>Testing for Software Engineers</li> 
+          </ul>
+          <aside class="notes">
+            <ul>
+              <li>What we are to do today</li>
+              <li>First some definitions: What is testing, types of tests, blabla</li>
+              <li>Test design techniques, really hardcore theory, that helps practical</li>
+              <li>Practical stuff, that should hopefully be useful to you: Automation and Unit Testing</li>
+            </ul>
+          </aside>
+        </section>
+        <section>
+          <h2>What is Software Testing?</h2>
+          <div class="fragment">
+            <blockquote >Testing is the process of executing a program or system with the intent of finding errors. (Myers, 1979)</blockquote>
+            Software Testing is <span class="highlight">not</span>          
+            <ul>
+              <li>... proving that a program contains no errors</li>
+              <li>... just checking if it works ¯\_(ツ)_/¯</li>
+            </ul>
+          </div> 
+          <aside class="notes">
+            <ul>
+              <li>First let me ask you, what do you think is the point of testing</li>
+              <li>Is it like, guaranteeing that a program contains no bugs? Making sure it works?</li>
+              <li>Definition</li>
+              <li>And not this stuff. Important from a mindset perspective</li>
+              <li>Your job is to find and eliminate bugs</li>
+            </ul>
+          </aside>
+
+        </section>   <section data-background="https://img.buzzfeed.com/buzzfeed-static/static/2014-02/enhanced/webdr06/21/0/anigif_enhanced-11146-1392959311-3.gif?downsize=715:*&output-format=auto&output-quality=auto" data-background-size="contain">
+        </section>
+        <section>
+          <h2>Anatomy of a Test Case</h2> 
+          <div class="row" >
+
+            <div class="column">
+              A test case consists of <span class="highlight">at least </span>
+              <ul>
+                <li>Pre-Condition</li>
+                <li>Input</li>
+                <li>Expected Result</li>
+              </ul>
+            </div>
+            <div class="column">
+              <img id="tc-icon" src="img/tc.png">
+            </div>
+          </div>
+          <p>A test case should always be <span class="highlight">reproducible.</p>
+
+          A test case is successful if it <span class="highlight">uncovered a bug</span>  <aside class="notes">
+            <ul>
+              <li>Lets talk about the basic building block of all tests, the test case</li>
+              <li>Important to know what it looks like</li>
+              <li>Pre-Condition: What needs to be done before executing the test case?</li>
+              <li>Input: What actions to take, what input to make? Officially split up, just to keep in mind</li>
+              <li>Expected Result: Whats coming out of the system.</li>
+              <li>At least, so maybe add a OK/NOK column, or split up input</li>
+              <li>Test Cases again should uncover bugs, and they must be reproducible</li>
+              <li>So pay attention to that precondition stuff</li>
+            </ul>
+          </aside>
+
+        </section>
+        <section>
+          <h2>Applications to Testing</h2> 
+          What CAN you actually test (as opposed to how)? 
+          <ul class="fragment" style="height: 60vh">
+            <li>Functional Testing</li>
+            <li>Performance Testing</li>
+            <li>Stress Testing</li>
+            <li>Security Testing</li>
+            <li>Usability Testing</li>
+            <li>Accessibility Testing</li>
+            <li>A/B Testing</li>
+            <li>Acceptance Testing</li>
+            <li>Compatibility Testing</li>
+            <li>Regression Testing</li>
+            <li>Smoke Testing</li>
+            <li>...</li>
+          </ul>
+
+          <aside class="notes">
+            <ul>
+              <li>Same game, what things do you reccon you can test, as opposed to how</li>
+              <li>Nice, I could think of that stuff</li>
+              <li>Way too much, just google a bit yourself, interesting challenges</li>
+              <li>Important: Basic Idea always remains the same, differ in uncovered errors</li>
+            </ul>
+          </aside>
+        </section>
+        <section data-state="header1">
+          <style>.header1 header:after { content: "Header 1 Example"; }</style>
+          <h2>Test Design</h2> 
+          Consider a trivial application that, based on the sides of a triangle returns the triangles type.
+          <pre> <code data-trim >
+          String triangle(double a, double b, double c) throws Exception {
+            if(a == b == c) { return "equilateral"; };
+            if(a == b || b == c || a == c) { return "isosceles";  }
+            ...
+
+            throw new Exception("Invalid triangle");
+          }
+          </code>
+          </pre>
+
+          Our goal is to provide tests that will possibly uncover bugs in this function - and be smart about it.
+          <aside class="notes">
+            <ul>
+              <li>Lets talk about test design</li>
+              <li>We want to uncover bugs, but we are a lazy, so lets think about how to uncover the most bugs with the least amount of work</li>
+              <li>We'll use this example</li>
+              <li>Function to put out what kind of triangle, may be invalid</li>
+            </ul>
+          </aside>
+        </section>
+
+        <section>
+          <h2>Partitions</h2> 
+          <blockquote >Partitions are segments of input data that yield the same result.</blockquote>
+
+          <p>Data that belongs to the same partition executes the same code paths (usually) - use <span class="highlight">one test case per partition</span>!</p>
+
+          </p>
+          Partitions for the triangle function?</p> 
+          <ul class="fragment">
+            <li>(1, 1, 1), (2, 2, 2), ...</li>
+            <li>(1.5, 2, 1.5), (2.5, 2.5, 3), ...</li>
+            <li>(1, 2, 3), (-2, 2, 3), ...</li>
+          </ul>
+          <aside class="notes">
+            <ul>
+              <li>First tool: Partitions</li>
+              <li>What are partitions</li>
+              <li>When thinking about code, same paths</li>
+              <li>So, ideally, we need only one test case for each partition</li>
+              <li>Partitions for the triangle?</li>
+              <li>We want be lazy, additional test cases not as much benefit</li>
+            </ul>
+          </aside>
+        </section>
+        <section>
+          <h2>Boundaries</h2> 
+          <p>Research has shown that most errors occur at the borders between partitions.</p>
+
+          <pre> <code data-trim >
+            if(a == b == c) { return "equilateral"; }
+          </code>
+          </pre>
+
+          The most likely inputs to reveal errors in this case would be: 
+
+          <ul>
+            <li>(1.0,1.0,1.0)</li>
+            <li>(1.0,1.0,1.000001)</li>
+            <li>(1.0,1.0,0.999999)</li>
+          </ul>
+          <aside class="notes">
+            <ul>
+              <li>Research shows errors happen at boundaries</li>
+              <li>If we look at code sample clear why</li>
+              <li>Floating point and programmer errors, might mistake lower for lower equals</li>
+              <li>Again, tests that reveal most bugs</li>
+              <li>Here examples</li>
+              <li>Note: Sometimes hard to identify boundaries</li>
+            </ul>
+        </section>
+        </section>
+        <aside class="notes">
+          <ul>
+            <li>We can take this lazyness further</li>
+            <li>Research has shown where most bugs lie</li>
+            <li>If you consider code example easy to see why</li>
+            <li>Is double, might be lower than, float accuracy</li>
+            <li>So our best bet is to use values that touch boundaries of partitions</li>
+            <li>See here</li>
+            <li>Word of warning: Sometimes it is hard to identify boundaries</li>
+          </ul>
+        </aside>
+        <section>
+          <h2>States</h2> 
+
+
+          <div class="row" >
+            <div class="column">
+              <blockquote >Depending on its state, a system may behave differently even for identical input.</blockquote>              </div>
+            <div class="column">
+              <img id="diagram" src="img/diagram.png">
+            </div>
+          </div>
+          When testing such an application, not only must the input be considered, but also if the system transitions into the correct states. This is called <span class="highlight"> state-based testing</span>.
+          <aside class="notes">
+            <ul>
+              <li>Now, consider stateful programs</li>
+              <li>Input identical, but system behaves differently based on state</li>
+              <li>Interesting, because not only correct behaviour in each state</li>
+              <li>but also state transitions</li>
+              <li>Consider buffer example here: empty, filled, full</li>
+              <li>Obviously stateful, consider add: In full will throw exception</li>
+              <li>Actually, there's transitions missing, which</li>
+              <li>Various techniques to approach that, but too much right now</li>
+            </ul>
+          </aside></section>
+          <section>
+            <h2>Test Coverage</h2>
+            <p>Metrics for checking the applicability of tests: <span class="highlight">Coverage</span></p>
+            <ul>
+              <li>Line Coverage</li>
+              <li>Path Coverage</li>
+              <li>Condition Coverage</li>
+              <li>State Coverage</li>
+              <li>...</li>
+            </ul>
+
+            See <a href="https://en.wikipedia.org/wiki/Code_coverage">Wikipedia</a> for more information. 
+            <aside class="notes">
+              <ul>
+                <li>You've heard of test coverage</li>
+                <li>Way of measuring the effectiveness of your tests</li>
+                <li>Line Coverage: Just lines</li>
+                <li>Path Coverage: Not the same, consider loops</li>
+                <li>Condition Coverage: Cover each outcome of each condition</li>
+                <li>State Transition Coverage: States and their transitions</li>
+                <li>There's a bunch more, good to think about effectiveness</li>
+              </ul>
+            </aside>
+          </section>
+          <section>
+            <alert-block>
+              <h2>When do you stop testing?</h2>
+              <blockquote >Tests can never guarantee that a program is without bugs. You stop testing when your tests are <span class="highlight">good enough</span>.</blockquote>   
+
+              <blockquote >Testing is risk based. Test to <span class="highlight">minimize risk</span> and maximize value, not to uncover all possible bugs.</blockquote> 
+
+              <aside class="notes">
+                <ul>
+                  <li>Another mindset thing, that ties in with effectiveness</li>
+                  <li>When can you stop testing, </li>
+                  <li>and the answer is when you consider your tests good enough.</li>
+                  <li>You can never test everything, so its always a question of risk, and addition value</li>
+                  <li>The point of testing is to add value to the application is amount of quality</li>
+                  <li>This comes with experience</li>
+                  <li>That's it with boring theory, lets talk about testing for software engineers</li>
+                </ul>
+              </aside>
+
+          </section>
+
+          <section >
+            <h2>Testing for Software Engineers</h2>
+            <img id="devvsqa" src="img/devvsqa.png">
+            <aside class="notes">
+              <ul>
+                <li>Heres the difference between software testers and devs</li>
+                <li>Haha, very funny, but not realistic</li>
+                <li>Nowadays the responsibility to produce quality code is also with devs</li>
+                <li>To produce quality software you need tests</li>
+              </ul>
+            </aside>
+
+          </section>
+
+          <section>
+            <h2>Test Automation</h2>
+
+            <p>Automated tests mean that you save time on test execution. But: </p>
+            <ul>
+              <li>Automated tests require <span class="highlight">maintenance</span>.</li>
+              <li>Automation is a big <span class="highlight">up-front investment</span> that will take time to repay itself.</li>
+              <li>Automation seldom reveals new errors but instead avoids regressions.</li>
+            </ul>
+            Better think carefully about what you automate and how!       
+            <aside class="notes">
+              <ul>
+                <li>You are familiar with automation, obviously</li>
+                <li>Devs usually dont focus on manual, exploratory tests etc</li>
+                <li>Here's some stuff to keep in mind though</li>
+                <li>Maintenance: Your application evolves, and so must your tests - and automated tests are often harder to maintain than manual ones</li>
+                <li>They are expensive: Automation takes time</li>
+                <li>Common misconception: Automation does not reveal errors, it just avoids regression</li>
+                <li>Automation in all its forms is no silver bullet and you need to be careful</li>
+              </ul>
+            </aside>
+          </section>
+
+          <section>
+            <h2>Test Levels</h2>
+            <div class="row">
+              <div class="column"> 
+                From top to bottom: 
+                <ul>
+                  <li>System Tests (UI)</li> 
+                  <li>Integration Tests</li> 
+                  <li>Unit Tests</li> 
+                </ul>
+              </div>
+              <div class="column"> 
+                <img id="devvsqa" src="img/pyramid.png"> 
+              </div>
+            </div>
+            <p>The further up the pyramid, the more <span class="highlight">expensive</span> your tests will be.</p>
+            <aside class="notes">
+              <ul>
+                <li>Automated Tests at different levels</li>
+                <li>System: The whole application</li>
+                <li>Integration: Parts of the application together</li>
+                <li>Unit: Smallest isolated parts</li>
+                <li>The further you move up the more expensive in maintenance and creation tests are</li>
+                <li>Tests will also get slower, need more resources to execute</li>
+                <li>So, why do we not only use unit tests</li>
+              </ul>
+            </aside>
+          </section>
+
+
+          <section data-background="http://gif-finder.com/wp-content/uploads/2017/04/Unit-tests-pass-no-integration-tests.gif">
+            <div style="background-color: rgba(241,241,241, 0.9); color: #fafafa; padding: 20px;">
+              <h2>Unit Testing Is Not Enough</h2>
+            </div>
+            <aside class="notes">
+              <ul>
+                <li>That's why</li>
+                <li>Tests on each level may fail to find certain errors</li>
+                <li>Integration tests will reveal problems like this one</li>
+                <li>Interaction problems between components, but unit tests can not</li>
+                <li>System tests reveal errors like configuration, or errors on specific environments</li>
+                <li>And so forth</li>
+                <li>That said, lets talk about unit tests.</li>
+                <li>You write unit tests, now you know drawbacks, but do you know what to watch out for to create good unit tests?</li>
+                <li>I give you the Ten Commandments of Good Unit Tests - my own creation, so take it with a grain of salt</li>
+              </ul>
+            </aside>  </section>
+            <section>
+              <h2>The Ten Commandments of Good Unit Tests</h2> 
+              <ol>
+                <li>Thou shalt treat your test code like your application code.</li> 
+                <li>Thou shalt keep your tests isolated from each other. </li> 
+                <li>Thou shalt make your tests fail.</li> 
+                <li>Thy tests shall test one thing, and one thing only.</li> 
+                <li>Thou shalt keep your tests simple, for they art living documentation.</li>
+              </ol>
+              <aside class="notes">
+                <ul>
+
+                  <li>I give you the Ten Commandments of Good Unit Tests - my own creation, so take it with a grain of salt</li>
+                  <li>Just what I consider solid advice, you should be able to come back to this if you feel lost</li>
+                  <li>1: Your test code should be coveted and kept squeaky clean like your application code</li>
+                  <li>Test code is not a second class citizen, saying so makes your tests sad</li>
+                  <li>2. Test Isolation, you don't want tests influence each other, because that makes them brittle</li>
+                  <li>You don't want tests that fail every now and then</li>
+                  <li>3. But you should make every test fail when you write them</li>
+                  <li>Write a test that passes, now change the application. Does the test fail? </li>
+                  <li>4. Each test should be a single test case, concentrate on one thing</li>
+                  <li>Otherwise hard to read, and brittle. If your test fails, you want to know whats going on, and not doing that makes this hard</li>
+                  <li>5. As simple as possible.</li>
+                  <li>Tests are living documentation, and to get the full benefit of that your docs must be readable, no?</li>
+                  <li>Lots to take in, don't worry, there's examples later where I explain what I mean some more</li>
+
+                </ul>
+              </aside>    </section>
+              <section>
+                <h2>The Ten Commandments of Good Unit Tests</h2> 
+                <ol start="6">
+                  <li>Thy tests shall be fast.</li>
+                  <li>Thou shalt use thy tests to improve thy application code.</li>
+                  <li>Thou shalt run thy tests daily.</li>
+                  <li>Thy tests shall be trustworthy.</li>
+                  <li>Thou shalt think like really hard about what you are testing.</li>
+                </ol>
+
+                <aside class="notes">
+                  <ul>
+                    <li>Heres some more.</li>
+                    <li>6. Unit tests shall be fast</li>
+                    <li>Feedback cycle, no use if you wait for 20 minutes</li>
+                    <li>7. Improve app code</li>
+                    <li>Writing tests alone improves code, a bit like a sanity check</li>
+                    <li>8. Run tests daily</li>
+                    <li>Avoids tests going to rot. Once your tests start to rot, you can throw them away.</li>
+                    <li>9. Trustworthyness</li>
+                    <li>Original purpose of test: reveal bugs. If its untrustworthy, its like boy who cried wolf</li>
+                    <li>10. Think hard</li>
+                    <li>Testing is not easy, not just break it, but know how to break it, and that takes time</li>
+                  </ul>
+                </aside>
+              </section>
+
+              <section>
+                <h2>Incomprehensive Tests</h2>
+                <pre>
+          <code data-trim class="java">
+@Test
+public void myTest() {
+    var t = new Triangle();
+    var e = List.of("equlilateral", "isosceles", "equilateral", ...);
+    for (var i = 0; i &lt; 10; i++) {
+      if (i == 0) {
+          assertTrue(e.get(i)
+                  .equals(t.getType(1, 1, 1)));
+      }
+      if (i == 1) {
+          assertTrue(e.get(i)
+                  .equals(t.getType(1.5, 1.5, 2)));
+      }
+      ...
+   }
+}
+                </code></pre>
+
+                <aside class="notes">
+                  <ul>
+                    <li>Some test case, that tests our triangle function from before</li>
+                    <li>I mean, obviously constructed</li>
+                    <li>Test is not readable, so no living docs</li>
+                    <li>Doesnt test one thing only</li>
+                    <li>Would you treat your application code like that?</li>
+                  </ul>
+                </aside>
+              </section>
+              <section>
+                <h2>Non-Isolated</h2>
+                <pre>
+          <code data-trim class="java">
+public class UsesTriangle {
+
+        public void calculateArea(Tuple point1, Tuple point2, Tuple point3){
+                // Calculate sides from points
+                ...
+                Triangle triangle = new Triangle();
+                if(triangle.getType(a, b, c) == "equilateral"){
+                  // Calculate Area for this case 
+                }
+                ...
+        }
+                </code></pre>
+
+                <pre>
+          <code data-trim class="java">
+@Test
+public void anotherTest() {
+        var usesTriangle = new UsesTriangle();
+        double result = usesTriangle.calculateArea(a,b,c);
+        assertEquals(10.0, result);
+}
+                </code></pre>
+                <aside class="notes">
+                  <ul>
+                    <li>Say you have dependency that uses our triangle function</li>
+                    <li>You test like that</li>
+                    <li>Test isolation?</li>
+                    <li>Improve application code</li>
+                  </ul>
+                </aside>
+              </section>
+
+              <section>
+                <h2>Slow and Untrustworthy</h2>
+                <pre>
+          <code data-trim class="java">
+@Test
+public void expensiveTest() {
+        var system = new SystemUnderTest();
+
+        int result = system.someReallyExpensiveOperation();
+
+        assertEquals(0, result);
+}
+
+@Test
+public void kindaRandomTest() {
+        var system = new SystemUnderTest();
+
+        // This test fails sometimes, just run it again if that happens
+        int result = system.randomOperationThatSometimesFails();
+
+        assertEquals(0, result);
+}
+                </code></pre>
+
+                <aside class="notes">
+                  <ul>
+                    <li>Simple examples</li>
+                    <li>Slow test</li>
+                    <li>Untrustworthy test</li>
+                    <li>Run tests daily</li>
+                  </ul>
+                </aside>
+              </section>
+              <section>
+                <h2>What is it good for?</h2>
+                Benefits of a good unit test suite: 
+                <ul>
+                  <li>Refactoring becomes a breeze &#x270C; </li>
+                  <li>Unit Tests enforce good code style; In writing good unit tests you write good code &#x2B50;</li>
+                  <li>Instant feedback, no more broken commits. &#x1F693;</li>
+                </ul>
+                <aside class="notes">
+                  <ul>
+                    <li>Refactoring</li>
+                    <li>Better code</li>
+                    <li>Instant feedback</li>
+                    <li>Happiness</li>
+                  </ul>
+                </aside>
+              </section>
+              <section>
+                <h2>Summary</h2>
+                <ul>
+                  <li>Testing is a systematic approach to finding errors in programs.</li>
+                  <li>Test design techniques: Partitions, Boundaries and Coverage</li>
+                  <li>Test automation is awesome, but hard</li>
+                  <li>Thy shalt remember the 10 Commandments!</li>
+                </ul>
+              </section>
+              <aside class="notes">
+                <ul>
+                  <li>Summary</li>
+                  <li>Testing is a systematic approach</li>
+                  <li>Where you can use it</li>
+                  <li>We talked about design techniques</li>
+                  <li>How to use testing in your lives as developers</li>
+                  <li>Automation, and the 10 commandments</li>
+                </ul>
+              </aside>
+              </section>
+              <section>
+                <h2>Sources</h2>
+                <ul>
+                  <li><a href=http://barbie.uta.edu/~mehra/Book1_The%20Art%20of%20Software%20Testing.pdf" target="_blank">The Art of Software Testing by Glenford J. Myers</a></li>
+                  <li><a href="https://github.com/aisuhua/books-1/blob/master/tdd%20%2B%20bdd/the-art-of-unit-testing.pdf" target="_blank">The Art of Unit Testing by Roy Osherove</a></li>
+                  <li><a href="https://tiss.tuwien.ac.at/course/courseDetails.xhtml?dswid=9947&dsrid=377&courseNr=188280&semester=2018S" target="_blank">Software Testing at TU Wien</a></li>
+                </ul>
+
+                <div class="fragment" style="text-align: center; margin-top: 30px">
+                  <h2>Thanks for your attention!</h3>
+                </div>
+
+                <aside class="notes">
+                  <ul>
+                    <li>References, links to PDF, semi-free</li>
+                    <li>Standard book</li>
+                    <li>Art of Unit Testing</li>
+                    <li>And software testing at tu wien</li>
+                    <li>Thanks, and questions</li>
+                  </ul>
+                </aside>
+              </section>
+
+      </div>
+    </div>
+    <script src="vendor/reveal.js/lib/js/head.min.js"></script>
+    <script src="vendor/reveal.js/js/reveal.js"></script>
+    <script>
+      Reveal.configure(
+        { 
+          transition: 'none',
+          history: 'true'
+        });
+Reveal.initialize({
+  dependencies: [
+    { src: 'vendor/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+    { src: 'vendor/reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+    { src: 'vendor/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+  ]
+});
+Reveal.initialize();
+    </script>
+  </body>
+</html>
+

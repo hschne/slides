@@ -1,0 +1,123 @@
+<html>
+<head>
+    <title>Demo</title>
+    <meta charset='utf-8'>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="vendor/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="css/slides.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/css/theme/night.css"/>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Grand+Hotel|Vibur' rel='stylesheet' type='text/css'>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section><h3>Score Service</h3>
+
+            <pre><code data-trim data-noescape>
+export class BattlescoreService {
+
+  constructor() {
+  }
+
+  public calculateBattlePoints(kitten: Kitten): number {
+    if (kitten == null) {
+      return 0;
+    }
+    const sum = kitten.strength * 0.90 + kitten.cuteness * 1.10 + kitten.speed;
+    return sum / (3 * 10);
+  }
+}
+	</code></pre>
+        </section>
+
+        <section><h3>Unit Test</h3>
+
+            <pre><code data-trim data-noescape>
+describe('BattlescoreService', () => {
+
+  let service: BattlescoreService;
+
+  beforeEach(() => {
+    service = new BattlescoreService();
+  });
+
+  it('should return correct battlescore', () => {
+    const kitten = new Kitten(1, '', 100, 100, 100);
+
+    const result = service.calculateBattlePoints(kitten);
+
+    expect(result).toBe(10);
+  });
+
+  it('with null should return correct battlescore', () => {
+    const result = service.calculateBattlePoints(null);
+
+    expect(result).toBe(0);
+  });
+});
+	</code></pre>
+        </section>
+
+        <section><h3>System Test</h3>
+
+            <pre><code data-trim data-noescape>
+  describe('when deleting a kitten', () => {
+
+    it('should remove item from kitten list', () => {
+      page.navigateTo();
+      let items = page.getKittenList().$$('ul');
+      expect(items.count()).toEqual(10);
+
+      page.doPressDeleteOn(items.first());
+
+      items = page.getKittenList().$$('ul');
+      expect(items.count()).toEqual(9);
+    });
+  });
+	</code>
+            </pre>
+        </section>
+
+    </div>
+</div>
+<script src="vendor/reveal.js/lib/js/head.min.js"></script>
+<script src="vendor/reveal.js/js/reveal.js"></script>
+<script>
+    Reveal.configure(
+        {
+            transition: 'none',
+            history: 'true'
+        });
+    Reveal.initialize({
+        markdown: {
+            smartypants: true
+        },
+        dependencies: [
+            {
+                src: 'vendor/reveal.js/lib/js/classList.js', condition: function () {
+                    return !document.body.classList;
+                }
+            },
+            {
+                src: 'vendor/reveal.js/plugin/highlight/highlight.js', async: true, callback: function () {
+                    hljs.initHighlightingOnLoad();
+                }
+            },
+            {src: 'vendor/reveal.js/plugin/notes/notes.js', async: true},
+            {
+                src: 'vendor/reveal.js/plugin/markdown/marked.js', condition: function () {
+                    return !!document.querySelector('[data-markdown]');
+                }
+            },
+            {
+                src: 'vendor/reveal.js/plugin/markdown/markdown.js', condition: function () {
+                    return !!document.querySelector('[data-markdown]');
+                }
+            },
+        ]
+    });
+</script>
+</body>
+</html>
+

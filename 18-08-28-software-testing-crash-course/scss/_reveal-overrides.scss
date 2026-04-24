@@ -1,0 +1,25 @@
+.reveal blockquote {
+  width: 90%;
+  border: none;
+  border-left-style: solid;
+  border-left-width: 4px;
+  border-left-color: $primary-color;
+  padding: 20px;
+}
+
+.reveal ul {
+ list-style: none;
+}
+
+.reveal ul,
+.reveal ol {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  li {
+    margin-bottom: 20px;
+  }
+}
+
+

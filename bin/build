@@ -4,19 +4,19 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${REPO_ROOT}/out"
 
-die() {
-  echo "Error: $1" >&2
-  exit "${2:-1}"
-}
+VERBOSE=false
 
 usage() {
   cat <<EOF
-Usage: bin/build [slug]
+Usage: bin/build [--verbose] [<talk-dir>...]
 
 Build talks into out/<slug>/. Reads talk.yml in each dated directory.
 
+Options:
+  --verbose, -v   Show full output from npm/pnpm commands
+
 Arguments:
-  slug    Build only the talk with this slug (optional). Builds all talks if omitted.
+  talk-dir    One or more talk directories to build (optional). Builds all talks if omitted.
 
 Frameworks:
   static   Copy directory as-is (legacy talks with vendored reveal.js)
@@ -25,24 +25,13 @@ Frameworks:
 EOF
 }
 
-parse_yaml_field() {
-  local file="$1"
-  local field="$2"
-  grep "^${field}:" "$file" | sed "s/^${field}:[[:space:]]*//" | tr -d '"' | tr -d "'"
-}
-
 build_talk() {
   local talk_dir="$1"
   local talk_yml="${talk_dir}/talk.yml"
 
-  [[ -f "$talk_yml" ]] || { echo "  Skipping ${talk_dir}: no talk.yml"; return; }
-
   local slug framework
-  slug=$(parse_yaml_field "$talk_yml" "slug")
-  framework=$(parse_yaml_field "$talk_yml" "framework")
-
-  [[ -n "$slug" ]]      || die "Missing 'slug' in ${talk_yml}"
-  [[ -n "$framework" ]] || die "Missing 'framework' in ${talk_yml}"
+  slug=$(yq '.slug' "$talk_yml")
+  framework=$(yq '.framework' "$talk_yml")
 
   local out_dir="${OUT_DIR}/${slug}"
   mkdir -p "$out_dir"
@@ -57,21 +46,28 @@ build_talk() {
     revealjs)
       (
         cd "$talk_dir"
-        npm install --silent
-        npm run build --silent
+        if $VERBOSE; then
+          npm install
+          npm run build
+        else
+          npm install --silent
+          npm run build --silent
+        fi
         cp -r dist/. "${out_dir}/"
       )
       ;;
     slidev)
       (
         cd "$talk_dir"
-        pnpm install --silent
-        pnpm build --base "/talks/${slug}/"
+        if $VERBOSE; then
+          pnpm install
+          pnpm build --base "/talks/${slug}/"
+        else
+          pnpm install --silent
+          pnpm build --base "/talks/${slug}/" 2>&1 | tail -5
+        fi
         cp -r dist/. "${out_dir}/"
       )
-      ;;
-    *)
-      die "Unknown framework '${framework}' in ${talk_yml}"
       ;;
   esac
 
@@ -82,75 +78,42 @@ generate_manifest() {
   local manifest="${OUT_DIR}/manifest.json"
   echo "Generating manifest.json"
 
-  local entries=()
   for talk_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
     local talk_yml="${talk_dir}/talk.yml"
-    [[ -f "$talk_yml" ]] || continue
-
-    local slug title framework public event thumbnail dir_name date
-    slug=$(parse_yaml_field "$talk_yml" "slug")
-    title=$(parse_yaml_field "$talk_yml" "title")
-    framework=$(parse_yaml_field "$talk_yml" "framework")
-    public=$(parse_yaml_field "$talk_yml" "public")
-    event=$(parse_yaml_field "$talk_yml" "event")
-    thumbnail=$(parse_yaml_field "$talk_yml" "thumbnail")
-
+    local dir_name date
     dir_name=$(basename "$talk_dir")
     date=$(echo "$dir_name" | grep -oE '^[0-9]{2}-[0-9]{2}-[0-9]{2}' | sed 's/^\([0-9]\{2\}\)-\([0-9]\{2\}\)-\([0-9]\{2\}\)/20\1-\2-\3/')
 
-    [[ -n "$slug" ]] || continue
+    yq -o=json "{\"slug\": .slug, \"title\": .title, \"date\": \"${date}\", \"event\": .event, \"framework\": .framework, \"public\": .public, \"thumbnail\": .thumbnail}" "$talk_yml"
+  done | jq -s '.' > "$manifest"
 
-    entries+=("{\"slug\":\"${slug}\",\"title\":\"${title}\",\"date\":\"${date}\",\"event\":\"${event}\",\"framework\":\"${framework}\",\"public\":${public:-false},\"thumbnail\":\"${thumbnail}\"}")
-  done
-
-  local json="["
-  local first=true
-  for entry in "${entries[@]+"${entries[@]}"}"; do
-    if [[ "$first" == true ]]; then
-      json+="$entry"
-      first=false
-    else
-      json+=",${entry}"
-    fi
-  done
-  json+="]"
-
-  echo "$json" > "$manifest"
   echo "  → out/manifest.json"
 }
 
 main() {
-  if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-    usage
-    exit 0
-  fi
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help|-h) usage; exit 0 ;;
+      --verbose|-v) VERBOSE=true; shift ;;
+      *) break ;;
+    esac
+  done
 
-  local filter="${1:-}"
   local built=0
 
   mkdir -p "$OUT_DIR"
 
-  for talk_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
-    [[ -d "$talk_dir" ]] || continue
-    local talk_yml="${talk_dir}/talk.yml"
-    [[ -f "$talk_yml" ]] || continue
-
-    if [[ -n "$filter" ]]; then
-      local slug
-      slug=$(parse_yaml_field "$talk_yml" "slug")
-      [[ "$slug" == "$filter" ]] || continue
-    fi
-
-    build_talk "$talk_dir"
-    built=$(( built + 1 ))
-  done
-
-  if [[ "$built" -eq 0 ]]; then
-    if [[ -n "$filter" ]]; then
-      die "No talk found with slug '${filter}'"
-    else
-      echo "No talks found."
-    fi
+  if [[ $# -gt 0 ]]; then
+    for talk_dir in "$@"; do
+      build_talk "$(cd "$talk_dir" && pwd)"
+      built=$(( built + 1 ))
+    done
+  else
+    for talk_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
+      [[ -d "$talk_dir" ]] || continue
+      build_talk "$talk_dir"
+      built=$(( built + 1 ))
+    done
   fi
 
   generate_manifest

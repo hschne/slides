@@ -1,0 +1,140 @@
+<html>
+<head>
+    <title>An Introduction To Frontend Testing</title>
+    <meta charset='utf-8'>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="vendor/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="css/slides.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/css/theme/night.css"/>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Grand+Hotel|Vibur' rel='stylesheet' type='text/css'>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+            <h2>An Introduction To Frontend Testing</h2>
+            <span class="author">
+                Hans-Jörg Schnedlitz - 19.10.2018
+            </span>
+            <aside class="notes">
+                - Hello everyone!
+                - My name is Hans, and I'm going to give you all a quick introduction to frontend testing
+                - with a focus on front end
+                - Im pretty excited to be here, thanks to Robert and Daniel for having me
+                - What are we going to talk about today?
+                - We'll cover the basics of testing
+                - Pretty high level overview
+                - I'll try and explain why testing is important
+                - Why you should do it ;)
+                - So more general, nothing to technical, but in the end
+                - a quick live demo of what tests for a small web application can look like
+            </aside>
+        </section>
+
+        <section id="intro" data-background-color="#223843">
+            <h2>Who am I?</h2>
+            <p>
+                Definitely not a frontend dev
+            <p>
+
+            <p>Used to do Java/C#, these days its Ruby &#x1F48E;</p>
+
+            <p>I'm also tutoring at TU Wien</p>
+
+            <p>I like testing &#x270C; </p>
+        </section>
+        <section data-background-image="img/mordor.gif">
+            <h3 style="text-align: right; margin-right: 10%">All Code Is Evil</h3>
+            <aside class="notes">
+                - Programming Sucks. I mean I love programming, but it's kind of true
+                - A lot has been written about how programming is hard
+                - No trying to scare you
+                - But it is complex, and that makes everything break everywhere all the time
+
+            </aside>
+        </section>
+        <section data-background-image="img/errors.png">
+            <aside class="notes">
+                - One story thats pretty dated
+                - Ariane horror story
+                - 1996
+                - 400$ in damages
+                - More recent
+                - Uber Self driving car decided to run over a pedestrian
+                - Analysis reveals it saw her but decided not to move
+                - So, theres lots of software with lots of bugs
+                - Where do bugs come from?
+            </aside>
+        </section>
+
+        <section><h3>Does this thing work?</h3>
+
+            <pre><code data-trim data-noescape>
+function div(a, b) {
+   return a/b;
+}
+	</code></pre>
+            A test consists of a precondition, some input, and some expected result.
+
+            <aside class="notes">
+                - A program always consists of a bunch of lines of code.
+                - As complex as everything is it always boils down to:
+                - You have some code, that takes an input, and some output.
+                - A test for this thing now has three components: Precondition, Input, Result
+                - When testing your job is to find inputs that reveal bugs, so unexpected results
+                - Really try to break it, because if you tried that and it didn't you know its probably going to hold up
+                - For example, if you were to call this with say 3 and 0, you would get infinity, which is dumb, but
+                that's javascript for you
+            </aside>
+        </section>
+
+        <section data-markdown="slides.md">
+        </section>
+    </div>
+</div>
+<script src="vendor/reveal.js/lib/js/head.min.js"></script>
+<script src="vendor/reveal.js/js/reveal.js"></script>
+<script>
+    Reveal.configure({
+            transition: 'none',
+            history: 'true'
+        });
+    Reveal.configure({
+        keyboard: {
+            40: 'next',
+            38: 'prev'
+        }
+    });
+    Reveal.initialize({
+        markdown: {
+            smartypants: true
+        },
+        dependencies: [
+            {
+                src: 'vendor/reveal.js/lib/js/classList.js', condition: function () {
+                    return !document.body.classList;
+                }
+            },
+            {
+                src: 'vendor/reveal.js/plugin/highlight/highlight.js', async: true, callback: function () {
+                    hljs.initHighlightingOnLoad();
+                }
+            },
+            {src: 'vendor/reveal.js/plugin/notes/notes.js', async: true},
+            {
+                src: 'vendor/reveal.js/plugin/markdown/marked.js', condition: function () {
+                    return !!document.querySelector('[data-markdown]');
+                }
+            },
+            {
+                src: 'vendor/reveal.js/plugin/markdown/markdown.js', condition: function () {
+                    return !!document.querySelector('[data-markdown]');
+                }
+            },
+        ]
+    });
+</script>
+</body>
+</html>
+
