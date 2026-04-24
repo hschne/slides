@@ -64,14 +64,14 @@ build_talk() {
           pnpm build --base "/talks/${slug}/"
         else
           pnpm install --silent
-          pnpm build --base "/talks/${slug}/" 2>&1 | tail -5
+          pnpm build --base "/talks/${slug}/" > /dev/null 2>&1
         fi
         cp -r dist/. "${out_dir}/"
       )
       ;;
   esac
 
-  echo "  → out/${slug}/"
+  echo "  ✓ ${slug} built successfully"
 }
 
 generate_manifest() {
