@@ -1,0 +1,5 @@
+slug: background-jobs
+title: Background Jobs from Scratch
+description: A from-scratch exploration of how background job processing works in Ruby, cutting through the magic before reaching for a gem.
+public: true
+framework: slidev

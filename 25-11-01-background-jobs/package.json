@@ -1,0 +1,20 @@
+{
+  "name": "2025-background-jobs",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "slidev build",
+    "dev": "slidev --open",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@iconify-json/logos": "^1.2.10",
+    "@slidev/cli": "^52.6.0",
+    "@slidev/theme-default": "latest",
+    "@slidev/theme-seriph": "latest",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.56.1"
+  }
+}
