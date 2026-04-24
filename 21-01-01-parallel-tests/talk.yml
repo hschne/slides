@@ -1,4 +1,5 @@
 slug: parallel-tests
 title: "Parallel Testing: Benefits and Pitfalls"
+description: A short talk highlighting the benefits and potential issues when using parallel tests in Rails. Held at vienna.rb.
 public: true
 framework: static

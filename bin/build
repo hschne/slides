@@ -3,17 +3,21 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${REPO_ROOT}/out"
+CACHE_DIR="${OUT_DIR}/.cache"
 
 VERBOSE=false
+FORCE=false
 
 usage() {
   cat <<EOF
-Usage: bin/build [--verbose] [<talk-dir>...]
+Usage: bin/build [--verbose] [--force] [<talk-dir>...]
 
 Build talks into out/<slug>/. Reads talk.yml in each dated directory.
+Skips talks whose source hasn't changed since the last build (hash-based).
 
 Options:
   --verbose, -v   Show full output from npm/pnpm commands
+  --force, -f     Rebuild all talks regardless of cache
 
 Arguments:
   talk-dir    One or more talk directories to build (optional). Builds all talks if omitted.
@@ -25,13 +29,72 @@ Frameworks:
 EOF
 }
 
+hash_dir() {
+  find "$1" -type f | sort | xargs sha256sum | sha256sum | cut -d' ' -f1
+}
+
+hash_root_files() {
+  sha256sum "${REPO_ROOT}/bin/build" "${REPO_ROOT}/mise.toml" 2>/dev/null \
+    | sha256sum | cut -d' ' -f1
+}
+
+check_root_changed() {
+  local hash_file="${CACHE_DIR}/root.hash"
+  local current_hash
+  current_hash=$(hash_root_files)
+
+  if [[ -f "$hash_file" ]] && [[ "$(cat "$hash_file")" == "$current_hash" ]]; then
+    return 1 # not changed
+  fi
+
+  echo "$current_hash" > "$hash_file"
+  return 0 # changed
+}
+
+clean_deleted_talks() {
+  for out_slug_dir in "${OUT_DIR}"/*/; do
+    [[ -d "$out_slug_dir" ]] || continue
+    local slug
+    slug=$(basename "$out_slug_dir")
+    [[ "$slug" == ".cache" ]] && continue
+
+    local found=false
+    for talk_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
+      [[ -d "$talk_dir" ]] || continue
+      local talk_yml="${talk_dir}/talk.yml"
+      [[ -f "$talk_yml" ]] || continue
+      if [[ "$(yq '.slug' "$talk_yml")" == "$slug" ]]; then
+        found=true
+        break
+      fi
+    done
+
+    if ! $found; then
+      echo "Removing deleted talk: ${slug}"
+      rm -rf "$out_slug_dir"
+      rm -f "${CACHE_DIR}/${slug}.hash"
+    fi
+  done
+}
+
 build_talk() {
   local talk_dir="$1"
+  local force_build="${2:-false}"
   local talk_yml="${talk_dir}/talk.yml"
 
   local slug framework
   slug=$(yq '.slug' "$talk_yml")
   framework=$(yq '.framework' "$talk_yml")
+
+  # Check cache
+  local hash_file="${CACHE_DIR}/${slug}.hash"
+  local current_hash
+  current_hash=$(hash_dir "$talk_dir")
+
+  if ! $force_build && [[ -f "$hash_file" ]] && [[ "$(cat "$hash_file")" == "$current_hash" ]]; then
+    echo "Skipping: ${slug} (unchanged)"
+    return 1
+  fi
 
   local out_dir="${OUT_DIR}/${slug}"
   mkdir -p "$out_dir"
@@ -71,6 +134,7 @@ build_talk() {
       ;;
   esac
 
+  echo "$current_hash" > "$hash_file"
   echo "  ✓ ${slug} built successfully"
 }
 
@@ -84,7 +148,7 @@ generate_manifest() {
     dir_name=$(basename "$talk_dir")
     date=$(echo "$dir_name" | grep -oE '^[0-9]{2}-[0-9]{2}-[0-9]{2}' | sed 's/^\([0-9]\{2\}\)-\([0-9]\{2\}\)-\([0-9]\{2\}\)/20\1-\2-\3/')
 
-    yq -o=json "{\"slug\": .slug, \"title\": .title, \"date\": \"${date}\", \"event\": .event, \"framework\": .framework, \"public\": .public, \"thumbnail\": .thumbnail}" "$talk_yml"
+    yq -o=json "{\"slug\": .slug, \"title\": .title, \"description\": .description, \"date\": \"${date}\", \"framework\": .framework, \"public\": .public}" "$talk_yml"
   done | jq -s '.' > "$manifest"
 
   echo "  → out/manifest.json"
@@ -95,30 +159,48 @@ main() {
     case "${1:-}" in
       --help|-h) usage; exit 0 ;;
       --verbose|-v) VERBOSE=true; shift ;;
+      --force|-f) FORCE=true; shift ;;
       *) break ;;
     esac
   done
 
   local built=0
+  local skipped=0
 
-  mkdir -p "$OUT_DIR"
+  mkdir -p "$OUT_DIR" "$CACHE_DIR"
+
+  # Clean output for deleted talk directories
+  clean_deleted_talks
+
+  # Check if root build files changed → force rebuild all
+  local force_build=$FORCE
+  if ! $force_build && check_root_changed; then
+    echo "Root build files changed — rebuilding all talks"
+    force_build=true
+  fi
 
   if [[ $# -gt 0 ]]; then
     for talk_dir in "$@"; do
-      build_talk "$(cd "$talk_dir" && pwd)"
-      built=$(( built + 1 ))
+      if build_talk "$(cd "$talk_dir" && pwd)" "$force_build"; then
+        built=$(( built + 1 ))
+      else
+        skipped=$(( skipped + 1 ))
+      fi
     done
   else
     for talk_dir in "${REPO_ROOT}"/[0-9][0-9]-*/; do
       [[ -d "$talk_dir" ]] || continue
-      build_talk "$talk_dir"
-      built=$(( built + 1 ))
+      if build_talk "$talk_dir" "$force_build"; then
+        built=$(( built + 1 ))
+      else
+        skipped=$(( skipped + 1 ))
+      fi
     done
   fi
 
   generate_manifest
 
-  echo "Done. Built ${built} talk(s)."
+  echo "Done. Built ${built}, skipped ${skipped} talk(s)."
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

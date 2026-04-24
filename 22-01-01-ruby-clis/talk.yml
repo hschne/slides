@@ -1,4 +1,5 @@
 slug: ruby-clis
 title: Building Delightful Command-Line Apps in Ruby
+description: A lightning talk about how to use Thor to build CLIs in Ruby, held at Euruko 2022 in Helsinki in front of roughly 700 attendees.
 public: true
 framework: static

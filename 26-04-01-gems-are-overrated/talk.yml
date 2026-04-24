@@ -1,6 +1,5 @@
 slug: gems-are-overrated
 title: Gems Are Overrated
-event: RubyConf AT
+description: A hot take arguing that Ruby developers reach for gems too quickly — and that rolling your own solution is often simpler and more instructive than it seems.
 public: true
 framework: slidev
-thumbnail: thumbnail.webp

@@ -1,4 +1,5 @@
 slug: reliability-measurements
 title: Reliability Measurements
+description: An internal talk at Meister covering tools and techniques for measuring and understanding application performance — from request times to profiling in production.
 public: true
 framework: static

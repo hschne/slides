@@ -1,4 +1,5 @@
 slug: fresh-features
 title: "Fresh Features, Julienne Cut"
+description: A talk about software delivery strategies — horizontal vs. vertical slicing — using cooking as a metaphor. Held at Baltic Ruby 2025.
 public: true
 framework: slidev

@@ -1,4 +1,5 @@
 slug: imgproxy
 title: Imgproxy
+description: Held at Meister, describing techniques to add Imgproxy to an existing Rails project.
 public: true
 framework: static

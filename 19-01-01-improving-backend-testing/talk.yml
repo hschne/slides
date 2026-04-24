@@ -1,4 +1,5 @@
 slug: improving-backend-testing
 title: Improving Backend Testing
+description: An internal talk for the backend team at Meister outlining techniques for writing more performant tests in Ruby on Rails applications.
 public: true
 framework: static
